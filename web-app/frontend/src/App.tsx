@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import axios from 'axios';
 import { Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js';
+import ChatPreview from './components/ChatPreview';
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
@@ -58,6 +59,11 @@ export default function App() {
 			<section className="mt-6 border rounded p-4">
 				<h2 className="font-semibold mb-2">Chatbot Setup (admin)</h2>
 				<p>Configure prompts, tone, and data collection scopes (stub).</p>
+			</section>
+
+			<section className="mt-6 border rounded p-4">
+				<h2 className="font-semibold mb-2">Chatbot Preview</h2>
+				<ChatPreview />
 			</section>
 		</div>
 	);
