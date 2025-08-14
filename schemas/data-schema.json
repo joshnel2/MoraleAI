@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/data-schema.json",
+  "title": "AI-Profile-Business-Tool Data Record",
+  "description": "Schema for anonymized, consent-driven employee chatbot data with integration points for business metrics.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "recordId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this record."
+    },
+    "employeeAnonymizedId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Anonymized employee UUID (never store direct identifiers)."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the data was collected."
+    },
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "granted": { "type": "boolean", "description": "Employee provided explicit consent." },
+        "grantedAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time", "description": "When consent or data expires and should be purged." },
+        "scope": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Consent scopes (e.g., analytics, model_training)."
+        }
+      },
+      "required": ["granted"],
+      "description": "Consent metadata for privacy compliance."
+    },
+    "emotionalState": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "happiness": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "stress": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "energy": { "type": "integer", "minimum": 1, "maximum": 10 }
+      },
+      "required": [],
+      "description": "Self-reported scales (1-10)."
+    },
+    "opinions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "whatsRight": { "type": "string", "maxLength": 4000 },
+        "whatsWrong": { "type": "string", "maxLength": 4000 }
+      },
+      "required": [],
+      "description": "Open-text feedback on business aspects."
+    },
+    "personalNotes": { "type": "string", "maxLength": 8000 },
+    "chatSession": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "type": "string", "format": "uuid" },
+        "messagesEncrypted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "role": { "type": "string", "enum": ["user", "assistant", "system"] },
+              "ciphertext": { "type": "string" },
+              "nonce": { "type": "string" },
+              "createdAt": { "type": "string", "format": "date-time" }
+            },
+            "required": ["role", "ciphertext", "nonce", "createdAt"]
+          },
+          "description": "Encrypted chat messages (AES-GCM recommended)."
+        },
+        "anonymizationPending": { "type": "boolean", "default": true }
+      }
+    },
+    "businessMetrics": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "kpiReferences": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kpiName": { "type": "string" },
+              "period": { "type": "string", "description": "e.g., 2025-Q1, 2025-08" },
+              "value": { "type": ["number", "string", "null"] },
+              "unit": { "type": ["string", "null"] }
+            },
+            "required": ["kpiName"]
+          },
+          "description": "Placeholder for future KPI integration."
+        }
+      },
+      "description": "Integration points for business KPIs."
+    }
+  },
+  "required": ["recordId", "employeeAnonymizedId", "timestamp", "consent" ]
+}
