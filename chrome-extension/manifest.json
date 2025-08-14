@@ -1,0 +1,25 @@
+{
+	"manifest_version": 3,
+	"name": "AI-Profile-Business-Tool",
+	"version": "0.1.0",
+	"description": "Private employee chatbot for anonymized, consent-based feedback.",
+	"action": {
+		"default_title": "AI PBT",
+		"default_popup": "popup.html"
+	},
+	"permissions": ["storage", "tabs"],
+	"host_permissions": [
+		"http://localhost:4000/*",
+		"https://*/*"
+	],
+	"background": {
+		"service_worker": "background.js"
+	},
+	"content_scripts": [
+		{
+			"matches": ["https://*.intranet/*", "http://localhost/*"],
+			"js": ["content.js"],
+			"run_at": "document_idle"
+		}
+	]
+}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>AI PBT</title>
+		<style>
+			body { font-family: sans-serif; width: 360px; margin: 0; padding: 12px; }
+			#chat { height: 320px; overflow: auto; border: 1px solid #ccc; padding: 8px; }
+			input, button { padding: 6px; }
+		</style>
+	</head>
+	<body>
+		<h3>AI-Profile-Business-Tool</h3>
+		<div id="chat"></div>
+		<div style="margin-top:8px; display:flex; gap:8px;">
+			<input id="message" placeholder="Type a message" style="flex:1;" />
+			<button id="send">Send</button>
+		</div>
+		<div style="margin-top:8px;">
+			<label><input type="checkbox" id="consent" checked /> I consent to anonymized processing</label>
+		</div>
+		<script src="popup.js"></script>
+	</body>
+</html>
