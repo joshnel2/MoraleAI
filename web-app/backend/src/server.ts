@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import { initializeChatbot } from './chatbot';
 
 // Basic config
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -101,15 +102,7 @@ const io = new SocketIOServer(server, {
 	cors: { origin: '*', credentials: false }
 });
 
-io.on('connection', (socket) => {
-	// Authenticate socket via token if needed
-	console.log('socket connected', socket.id);
-	// Placeholder chatbot room
-	socket.on('chat:message', (payload) => {
-		// In future: route to NLP handler, store encrypted, emit response
-		socket.emit('chat:reply', { message: `Echo: ${payload?.message ?? ''}` });
-	});
-});
+initializeChatbot(io);
 
 server.listen(PORT, () => {
 	console.log(`API listening on http://localhost:${PORT}`);
