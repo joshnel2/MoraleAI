@@ -23,15 +23,17 @@ router.post('/aggregate', requireAuth, async (req, res) => {
 		const enc = encryptString(m.text);
 		return { role: m.role, ciphertext: enc.ciphertext, iv: enc.iv, tag: enc.tag };
 	});
+	const expireAt = consent.expiresAt ? new Date(consent.expiresAt) : undefined;
 	const session = await ChatSession.create({
 		companyId: (req as any).user.companyId,
 		employeeAnonymizedId,
 		consent: {
 			granted: true,
 			grantedAt: consent.grantedAt ? new Date(consent.grantedAt) : new Date(),
-			expiresAt: consent.expiresAt ? new Date(consent.expiresAt) : undefined,
+			expiresAt: expireAt,
 			scope: consent.scope
 		},
+		expireAt,
 		anonymizationPending: true,
 		messagesEncrypted: encMessages
 	});

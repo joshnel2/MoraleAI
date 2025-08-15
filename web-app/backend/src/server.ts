@@ -11,6 +11,7 @@ import { initializeChatbot } from './chatbot';
 import authRoutes from './routes/auth';
 import dataRoutes from './routes/data';
 import metricsRoutes from './routes/metrics';
+import auditRoutes from './routes/audit';
 
 // Basic config
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -37,6 +38,7 @@ mongoose
 app.use('/auth', authRoutes);
 app.use('/data', dataRoutes);
 app.use('/metrics', metricsRoutes);
+app.use('/audit', auditRoutes);
 
 app.get('/health', (_req: Request, res: Response) => res.json({ ok: true }));
 

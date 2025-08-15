@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { audit } from '../middleware/audit';
 import { KpiRecord } from '../models/KpiRecord';
+import multer from 'multer';
+import { parse } from 'csv-parse/sync';
 
 const router = Router();
 
@@ -10,10 +12,34 @@ const kpiSchema = z.object({ kpiName: z.string(), period: z.string(), value: z.u
 const uploadSchema = z.object({ records: z.array(kpiSchema) });
 
 router.post('/upload', requireAuth, requireRole('admin', 'ceo'), audit('kpi_upload'), async (req, res) => {
-	const parse = uploadSchema.safeParse(req.body);
-	if (!parse.success) return res.status(400).json({ error: parse.error.flatten() });
+	const parseRes = uploadSchema.safeParse(req.body);
+	if (!parseRes.success) return res.status(400).json({ error: parseRes.error.flatten() });
 	const companyId = (req as any).user.companyId;
-	const docs = parse.data.records.map((r) => ({ companyId, kpiName: r.kpiName, period: r.period, value: r.value ?? null, unit: r.unit ?? null }));
+	const docs = parseRes.data.records.map((r) => ({ companyId, kpiName: r.kpiName, period: r.period, value: r.value ?? null, unit: r.unit ?? null }));
+	await KpiRecord.insertMany(docs);
+	return res.json({ ok: true, inserted: docs.length });
+});
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+
+router.post('/upload-csv', requireAuth, requireRole('admin', 'ceo'), audit('kpi_upload_csv'), upload.single('file'), async (req, res) => {
+	if (!req.file) return res.status(400).json({ error: 'Missing file' });
+	const csv = req.file.buffer.toString('utf8');
+	let records: Array<{ kpiName: string; period: string; value?: number | string | null; unit?: string | null }> = [];
+	try {
+		const parsed = parse(csv, { columns: true, skip_empty_lines: true, trim: true });
+		records = (parsed as any[]).map((row) => ({
+			kpiName: String(row.kpiName || row.KPI || row.kpi || '').trim(),
+			period: String(row.period || row.Period || '').trim(),
+			value: row.value ?? row.Value ?? null,
+			unit: (row.unit ?? row.Unit ?? null) as string | null
+		})).filter(r => r.kpiName && r.period);
+	} catch (e) {
+		return res.status(400).json({ error: 'Failed to parse CSV' });
+	}
+	const companyId = (req as any).user.companyId;
+	const docs = records.map((r) => ({ companyId, kpiName: r.kpiName, period: r.period, value: r.value ?? null, unit: r.unit ?? null }));
+	if (docs.length === 0) return res.status(400).json({ error: 'No valid rows' });
 	await KpiRecord.insertMany(docs);
 	return res.json({ ok: true, inserted: docs.length });
 });

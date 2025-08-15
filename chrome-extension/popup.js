@@ -4,6 +4,7 @@ const sendBtn = document.getElementById('send');
 const consentEl = document.getElementById('consent');
 
 let socket;
+let token = null;
 
 function append(text, who) {
 	const p = document.createElement('p');
@@ -12,14 +13,24 @@ function append(text, who) {
 	chatEl.scrollTop = chatEl.scrollHeight;
 }
 
+async function login() {
+	try {
+		const res = await fetch('http://localhost:4000/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'admin@example.com', password: 'examplePass123' }) });
+		if (res.ok) {
+			const data = await res.json();
+			token = data.token;
+		}
+	} catch {}
+}
+
 function connect() {
-	if (socket) socket.close();
-	// Basic WebSocket example — in production use an endpoint that bridges to Socket.io or native ws
-	socket = new WebSocket('ws://localhost:4000');
-	socket.onopen = () => append('Connected.', 'system');
-	socket.onmessage = (evt) => append(evt.data, 'assistant');
-	socket.onclose = () => append('Disconnected.', 'system');
-	socket.onerror = () => append('Error.', 'system');
+	if (socket) socket.disconnect();
+	// socket.io client via CDN
+	const io = window.io;
+	socket = io('http://localhost:4000', { auth: { token } });
+	socket.on('connect', () => append('Connected.', 'system'));
+	socket.on('chat:reply', (payload) => append(payload?.message || '', 'assistant'));
+	socket.on('disconnect', () => append('Disconnected.', 'system'));
 }
 
 sendBtn.addEventListener('click', () => {
@@ -30,10 +41,15 @@ sendBtn.addEventListener('click', () => {
 		return;
 	}
 	append(msg, 'you');
-	try {
-		socket?.send(msg);
-	} catch {}
+	try { socket?.emit('chat:message', { message: msg }); } catch {}
 	inputEl.value = '';
 });
 
-connect();
+(async () => {
+	await login();
+	// load socket.io client
+	const s = document.createElement('script');
+	s.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
+	s.onload = connect;
+	document.body.appendChild(s);
+})();

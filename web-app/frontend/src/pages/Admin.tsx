@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import axios from 'axios';
+import MetricsChart from '../components/MetricsChart';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
@@ -9,6 +10,7 @@ export default function Admin() {
 	const [email, setEmail] = useState('admin@example.com');
 	const [password, setPassword] = useState('examplePass123');
 	const [kpiJson, setKpiJson] = useState('{"records":[{"kpiName":"sales","period":"2025-08","value":12345}]}');
+	const [csvFile, setCsvFile] = useState<File | null>(null);
 
 	const client = useMemo(() => {
 		const inst = axios.create({ baseURL: API_BASE });
@@ -33,6 +35,13 @@ export default function Admin() {
 		await client.post('/metrics/upload', payload);
 	}
 
+	async function uploadCsv() {
+		if (!csvFile) return;
+		const form = new FormData();
+		form.append('file', csvFile);
+		await client.post('/metrics/upload-csv', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+	}
+
 	return (
 		<div className="space-y-4">
 			<h2 className="text-xl font-semibold">Admin</h2>
@@ -55,9 +64,15 @@ export default function Admin() {
 			<div className="border p-3 rounded">
 				<h3 className="font-medium mb-2">Upload KPIs (JSON)</h3>
 				<textarea className="border p-2 w-full h-40 font-mono" value={kpiJson} onChange={e=>setKpiJson(e.target.value)} />
-				<div className="mt-2">
-					<button className="px-3 py-2 bg-purple-600 text-white rounded" onClick={uploadKpis} disabled={!token}>Upload</button>
+				<div className="mt-2 space-x-2">
+					<button className="px-3 py-2 bg-purple-600 text-white rounded" onClick={uploadKpis} disabled={!token}>Upload JSON</button>
+					<input type="file" accept=".csv" onChange={e=>setCsvFile(e.target.files?.[0] ?? null)} />
+					<button className="px-3 py-2 bg-indigo-600 text-white rounded" onClick={uploadCsv} disabled={!token || !csvFile}>Upload CSV</button>
 				</div>
+			</div>
+			<div className="border p-3 rounded">
+				<h3 className="font-medium mb-2">Metrics Summary</h3>
+				<MetricsChart />
 			</div>
 		</div>
 	);
