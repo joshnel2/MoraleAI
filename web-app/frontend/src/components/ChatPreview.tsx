@@ -9,13 +9,31 @@ interface ChatMessage {
 }
 
 export default function ChatPreview() {
-	const [messages, setMessages] = useState<ChatMessage[]>([{ who: 'system', text: 'Connected to chatbot preview.' }]);
+	const [messages, setMessages] = useState<ChatMessage[]>([{ who: 'system', text: 'Chatbot preview.' }]);
 	const [input, setInput] = useState('');
+	const [token, setToken] = useState<string | null>(null);
 	const socketRef = useRef<Socket | null>(null);
 
-	const socket = useMemo(() => io(API_BASE, { autoConnect: false }), []);
+	useEffect(() => {
+		(async () => {
+			try {
+				const res = await fetch(`${API_BASE}/auth/login`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ email: 'admin@example.com', password: 'example' })
+				});
+				if (res.ok) {
+					const data = await res.json();
+					setToken(data.token);
+				}
+			} catch {}
+		})();
+	}, []);
+
+	const socket = useMemo(() => io(API_BASE, { autoConnect: false, auth: { token } }), [token]);
 
 	useEffect(() => {
+		if (!token) return;
 		socketRef.current = socket;
 		socket.connect();
 		socket.on('connect', () => setMessages((m) => [...m, { who: 'system', text: 'Socket connected.' }]));
@@ -27,7 +45,7 @@ export default function ChatPreview() {
 			socket.removeAllListeners();
 			socket.disconnect();
 		};
-	}, [socket]);
+	}, [socket, token]);
 
 	function send() {
 		const text = input.trim();
@@ -48,7 +66,7 @@ export default function ChatPreview() {
 			</div>
 			<div className="mt-2 flex gap-2">
 				<input className="flex-1 border rounded px-2 py-1" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type a message" />
-				<button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={send}>Send</button>
+				<button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={send} disabled={!token}>Send</button>
 			</div>
 		</div>
 	);
