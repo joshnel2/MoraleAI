@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import axios from 'axios';
 import MetricsChart from '../components/MetricsChart';
+import CsvMapper from '../components/CsvMapper';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
@@ -71,6 +72,9 @@ export default function Admin() {
 					<button className="px-3 py-2 bg-purple-600 text-white rounded" onClick={uploadKpis} disabled={!token}>Upload JSON</button>
 					<input type="file" accept=".csv" onChange={e=>setCsvFile(e.target.files?.[0] ?? null)} />
 					<button className="px-3 py-2 bg-indigo-600 text-white rounded" onClick={uploadCsv} disabled={!token || !csvFile}>Upload CSV</button>
+				</div>
+				<div className="mt-3">
+					<CsvMapper />
 				</div>
 			</div>
 			<div className="border p-3 rounded">
