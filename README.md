@@ -30,17 +30,19 @@ cd web-app/frontend
 npm install
 npm run dev
 ```
-- Environment variables (backend)
-  - `PORT=4000`
-  - `MONGO_URI=mongodb://localhost:27017/ai-pbt`
-  - `JWT_SECRET=change-me`
-  - `ENCRYPTION_KEY_BASE64` base64-encoded 32-byte key
 
-## Security
-- JWT auth with role-based access
-- Field-level AES-256-GCM encryption helper
-- Consent flags and TTL-based expiration with purge job fallback
-- Audit logging for admin/CEO actions
+## Security & Compliance
+- Consent-first: consent flags required on collection; data expiration via TTL and purge job
+- Encryption: AES-256-GCM helper for sensitive fields; HTTPS and encrypted S3
+- Anonymization: identifiers hashed to anonymized UUID-like tokens before training/aggregation
+- Audit logging: admin/CEO actions recorded
+- Data subject rights: delete requests endpoint at `/privacy/data/delete-request` (queue and purge in production)
+- Ethical AI: training includes moral alignment weights; document bias mitigations
+- Compliance: designed to support GDPR/CCPA principles (notice, consent, purpose limitation, access/deletion)
+
+## Deployment
+- See `ai-model/` for AWS infra (CDK) and model scripts
+- A `deploy.sh` script can orchestrate building/publishing web-app, packaging the extension, and deploying AI infra (to be customized per environment)
 
 ## Notes
 - Chrome extension (MV3) connects to backend via socket.io with JWT.

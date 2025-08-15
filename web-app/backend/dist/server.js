@@ -14,6 +14,7 @@ import metricsRoutes from './routes/metrics';
 import auditRoutes from './routes/audit';
 import swaggerUi from 'swagger-ui-express';
 import platformRoutes from './routes/platform';
+import privacyRoutes from './routes/privacy';
 const openApiDoc = {
     openapi: '3.0.0',
     info: { title: 'AI-Profile-Business-Tool API', version: '0.1.0' },
@@ -45,6 +46,7 @@ app.use('/data', dataRoutes);
 app.use('/metrics', metricsRoutes);
 app.use('/audit', auditRoutes);
 app.use('/platform', platformRoutes);
+app.use('/privacy', privacyRoutes);
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
 app.get('/health', (_req, res) => res.json({ ok: true }));
 // HTTP + Socket.io

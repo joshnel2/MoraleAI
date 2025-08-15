@@ -10,6 +10,9 @@ const loginBtn = document.getElementById('login');
 
 let socket;
 let token = null;
+let apiBase = 'http://localhost:4000';
+
+chrome.storage.local.get(['api'], (res) => { apiBase = res.api || apiBase; });
 
 function append(text, who) {
 	const p = document.createElement('p');
@@ -20,10 +23,11 @@ function append(text, who) {
 
 async function login() {
 	try {
-		const res = await fetch('http://localhost:4000/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: emailEl.value, password: passwordEl.value }) });
+		const res = await fetch(`${apiBase}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: emailEl.value, password: passwordEl.value }) });
 		if (res.ok) {
 			const data = await res.json();
 			token = data.token;
+			chrome.storage.local.set({ token });
 			append('Logged in.', 'system');
 			connect();
 		} else {
@@ -37,7 +41,7 @@ async function login() {
 function connect() {
 	if (!token) return append('Please login first.', 'system');
 	if (socket) socket.disconnect();
-	socket = io('http://localhost:4000', { auth: { token } });
+	socket = io(apiBase, { auth: { token } });
 	socket.on('connect', () => append('Connected.', 'system'));
 	socket.on('chat:reply', (payload) => append(payload?.message || '', 'assistant'));
 	socket.on('disconnect', () => append('Disconnected.', 'system'));

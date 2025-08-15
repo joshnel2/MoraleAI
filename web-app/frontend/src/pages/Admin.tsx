@@ -54,6 +54,16 @@ export default function Admin() {
 		await client.post('/platform/training/aws/start', {});
 	}
 
+	async function createApiKey() {
+		const res = await client.post('/platform/api-keys/create', {});
+		alert(`New API key: ${res.data.apiKey}`);
+	}
+
+	async function listKeys() {
+		const res = await client.get('/platform/api-keys');
+		alert(JSON.stringify(res.data.keys));
+	}
+
 	return (
 		<div className="space-y-4">
 			<h2 className="text-xl font-semibold">Admin</h2>
@@ -78,6 +88,8 @@ export default function Admin() {
 				<div className="space-x-2">
 					<button className="px-3 py-2 bg-purple-700 text-white rounded" onClick={deployChatbot} disabled={!token}>Deploy Chatbot</button>
 					<button className="px-3 py-2 bg-amber-700 text-white rounded" onClick={startTraining} disabled={!token}>Start Training (AWS)</button>
+					<button className="px-3 py-2 bg-gray-700 text-white rounded" onClick={createApiKey} disabled={!token}>Create API Key</button>
+					<button className="px-3 py-2 bg-gray-500 text-white rounded" onClick={listKeys} disabled={!token}>List API Keys</button>
 				</div>
 			</div>
 			<div className="border p-3 rounded">

@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>AI PBT Settings</title>
+		<style>body{font-family:sans-serif;margin:12px}</style>
+	</head>
+	<body>
+		<h3>Settings</h3>
+		<div>
+			<label>Backend URL <input id="api" placeholder="http://localhost:4000" /></label>
+		</div>
+		<div style="margin-top:8px;">
+			<button id="save">Save</button>
+			<button id="delete">Request Data Deletion</button>
+		</div>
+		<script>
+			const apiEl = document.getElementById('api');
+			document.getElementById('save').onclick = () => {
+				chrome.storage.local.set({ api: apiEl.value || 'http://localhost:4000' });
+				alert('Saved');
+			};
+			document.getElementById('delete').onclick = async () => {
+				const { api = 'http://localhost:4000', token } = await chrome.storage.local.get(['api','token']);
+				if (!token) return alert('Please login in the popup first.');
+				await fetch(`${api}/privacy/data/delete-request`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+				alert('Delete request sent');
+			};
+		</script>
+	</body>
+</html>
