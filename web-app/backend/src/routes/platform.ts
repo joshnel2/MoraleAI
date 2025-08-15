@@ -56,6 +56,28 @@ router.get('/insights', requireAuth, requireRole('admin', 'ceo'), async (req, re
 	return res.json({ insights: txt ? JSON.parse(txt) : [] });
 });
 
+router.get('/recommendations', requireAuth, requireRole('admin', 'ceo', 'employee'), async (req, res) => {
+	const s3Bucket = process.env.TRAIN_BUCKET || process.env.S3_DATA_BUCKET;
+	const companyId = (req as any).user.companyId;
+	let recs: any = { strategy: [], automations: [], tasks: [] };
+	if (s3Bucket) {
+		const key = `models/${companyId}/insights.json`;
+		const txt = await downloadTextFromS3(s3Bucket, key);
+		const insights = txt ? JSON.parse(txt) : [];
+		recs.strategy = insights.filter((i: any) => /strategy|fair|inclusive|wellbeing/i.test(i.title || ''));
+		recs.automations = insights.filter((i: any) => /automate|automation|process/i.test(i.title || ''));
+		recs.tasks = insights.filter((i: any) => /task|action|follow up/i.test(i.title || ''));
+	}
+	if (!recs.strategy.length && !recs.automations.length && !recs.tasks.length) {
+		recs = {
+			strategy: [{ title: 'Improve ethical onboarding', detail: 'Standardize mentorship and feedback loops' }],
+			automations: [{ title: 'Automate weekly check-ins', detail: 'Schedule AI-driven check-ins with employees' }],
+			tasks: [{ title: 'Review KPI trends', detail: 'Examine sales dip in 2025-08 with morale data' }]
+		};
+	}
+	return res.json({ recommendations: recs });
+});
+
 router.get('/config', requireAuth, async (req, res) => {
 	return res.json({
 		companyId: (req as any).user.companyId,
