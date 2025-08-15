@@ -8,6 +8,9 @@ import { startTrainingJob } from '../services/sagemaker';
 import { AggregatedRecord } from '../models/AggregatedRecord';
 import { Company } from '../models/Company';
 import jwt from 'jsonwebtoken';
+import { buildTrainingArtifact } from '../services/trainingArtifact';
+import os from 'os';
+import path from 'path';
 
 const router = Router();
 
@@ -25,6 +28,12 @@ router.post('/training/aws/start', requireAuth, requireRole('admin', 'ceo'), aud
 	const jobName = `ai-pbt-${companyId}-${Date.now()}`;
 	await startTrainingJob(jobName, roleArn, `s3://${s3Bucket}/datasets/${companyId}`, `s3://${s3Bucket}/models/${companyId}`);
 	return res.status(202).json({ status: 'started', jobId: jobName });
+});
+
+router.post('/training/build-artifact', requireAuth, requireRole('admin', 'ceo'), audit('training_build_artifact'), async (req, res) => {
+	const tmp = path.join(os.tmpdir(), `ai-pbt-train-${Date.now()}.zip`);
+	await buildTrainingArtifact(tmp);
+	return res.json({ artifact: tmp });
 });
 
 router.post('/datasets/upload', requireAuth, requireRole('admin', 'ceo'), audit('dataset_upload'), async (req, res) => {
