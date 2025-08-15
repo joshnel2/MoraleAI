@@ -64,4 +64,10 @@ router.get('/summary', requireAuth, requireRole('admin', 'ceo'), async (req, res
 	return res.json({ summary });
 });
 
+router.get('/kpis', requireAuth, requireRole('admin', 'ceo'), async (req, res) => {
+	const companyId = (req as any).user.companyId;
+	const names = await KpiRecord.distinct('kpiName', { companyId });
+	return res.json({ kpis: names });
+});
+
 export default router;

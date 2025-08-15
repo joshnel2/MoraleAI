@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js';
 import ChatPreview from './components/ChatPreview';
 import Admin from './pages/Admin';
+import Audit from './pages/Audit';
 import { saveToken, getToken, clearToken } from './utils/auth';
 import RoleGate from './components/RoleGate';
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
@@ -44,7 +45,8 @@ export default function App() {
 		return instance;
 	}, [token]);
 
-	const [route, setRoute] = useState<'home' | 'admin'>('home');
+	type Route = 'home' | 'admin' | 'audit';
+	const [route, setRoute] = useState<Route>('home');
 
 	return (
 		<div className="min-h-screen p-6">
@@ -53,6 +55,9 @@ export default function App() {
 				<button className="px-3 py-2 border rounded" onClick={() => setRoute('home')}>Home</button>
 				<RoleGate role="employee" current={role}>
 					<button className="px-3 py-2 border rounded" onClick={() => setRoute('admin')}>Admin</button>
+				</RoleGate>
+				<RoleGate role="ceo" current={role}>
+					<button className="px-3 py-2 border rounded" onClick={() => setRoute('audit')}>Audit</button>
 				</RoleGate>
 				{token ? (
 					<button className="px-3 py-2 border rounded" onClick={logout}>Logout</button>
@@ -63,6 +68,8 @@ export default function App() {
 
 			{route === 'admin' ? (
 				<RoleGate role="employee" current={role}><Admin /></RoleGate>
+			) : route === 'audit' ? (
+				<RoleGate role="ceo" current={role}><Audit /></RoleGate>
 			) : (
 				<>
 					<section className="grid gap-6 md:grid-cols-2">
