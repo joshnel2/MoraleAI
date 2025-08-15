@@ -10,6 +10,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { initializeChatbot } from './chatbot';
 import authRoutes from './routes/auth';
 import dataRoutes from './routes/data';
+import metricsRoutes from './routes/metrics';
 // Basic config
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/ai-pbt';
@@ -31,6 +32,7 @@ mongoose
 // Routes
 app.use('/auth', authRoutes);
 app.use('/data', dataRoutes);
+app.use('/metrics', metricsRoutes);
 app.get('/health', (_req, res) => res.json({ ok: true }));
 // HTTP + Socket.io
 const server = http.createServer(app);

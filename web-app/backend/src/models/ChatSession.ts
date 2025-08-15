@@ -28,6 +28,7 @@ export interface ChatSessionDocument extends Document {
 		expiresAt?: Date;
 		scope?: string[];
 	};
+	expireAt?: Date; // duplicated for TTL index
 	anonymizationPending: boolean;
 	messagesEncrypted: EncryptedMessageDocument[];
 	createdAt: Date;
@@ -44,6 +45,7 @@ const ChatSessionSchema = new Schema<ChatSessionDocument>(
 			expiresAt: { type: Date },
 			scope: [{ type: String }]
 		},
+		expireAt: { type: Date, index: { expireAfterSeconds: 0 } },
 		anonymizationPending: { type: Boolean, default: true },
 		messagesEncrypted: { type: [EncryptedMessageSchema], default: [] }
 	},

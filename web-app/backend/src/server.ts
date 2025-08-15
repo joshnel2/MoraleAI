@@ -10,6 +10,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { initializeChatbot } from './chatbot';
 import authRoutes from './routes/auth';
 import dataRoutes from './routes/data';
+import metricsRoutes from './routes/metrics';
 
 // Basic config
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -35,6 +36,7 @@ mongoose
 // Routes
 app.use('/auth', authRoutes);
 app.use('/data', dataRoutes);
+app.use('/metrics', metricsRoutes);
 
 app.get('/health', (_req: Request, res: Response) => res.json({ ok: true }));
 

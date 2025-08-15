@@ -15,6 +15,7 @@ const ChatSessionSchema = new Schema({
         expiresAt: { type: Date },
         scope: [{ type: String }]
     },
+    expireAt: { type: Date, index: { expireAfterSeconds: 0 } },
     anonymizationPending: { type: Boolean, default: true },
     messagesEncrypted: { type: [EncryptedMessageSchema], default: [] }
 }, { timestamps: true });
