@@ -1,6 +1,9 @@
 import { app, BrowserWindow } from 'electron';
+import { spawn } from 'child_process';
+import path from 'path';
 
 let win: BrowserWindow | null = null;
+let uploader: any = null;
 
 async function createWindow() {
 	win = new BrowserWindow({ width: 480, height: 640, webPreferences: { nodeIntegration: true } });
@@ -29,6 +32,17 @@ async function createWindow() {
 		</script>
 		</body></html>
 	`));
+
+	win.webContents.on('did-finish-load', () => {
+		// read values and spawn uploader with env
+		win?.webContents.executeJavaScript('localStorage.getItem("api")').then((api: any) => {
+			win?.webContents.executeJavaScript('localStorage.getItem("token")').then((token: any) => {
+				if (api && token && !uploader) {
+					uploader = spawn(process.execPath, [path.join(__dirname, 'uploader.js')], { env: { ...process.env, API_BASE: api, TOKEN: token } });
+				}
+			});
+		});
+	});
 }
 
 app.on('ready', createWindow);
