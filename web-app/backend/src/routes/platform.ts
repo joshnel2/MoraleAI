@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { ApiKey } from '../models/ApiKey';
 import { uploadTextToS3, downloadTextFromS3 } from '../services/s3';
 import { startTrainingJob } from '../services/sagemaker';
+import { AggregatedRecord } from '../models/AggregatedRecord';
 
 const router = Router();
 
@@ -63,6 +64,35 @@ router.get('/api-keys', requireAuth, requireRole('admin', 'ceo'), async (req, re
 	const companyId = (req as any).user.companyId;
 	const keys = await ApiKey.find({ companyId }).select({ hash: 1, createdAt: 1 });
 	return res.json({ keys });
+});
+
+router.post('/datasets/aggregate-upload', requireAuth, requireRole('admin', 'ceo'), audit('dataset_aggregate_upload'), async (req, res) => {
+	const s3Bucket = process.env.TRAIN_BUCKET || process.env.S3_DATA_BUCKET;
+	if (!s3Bucket) return res.status(500).json({ error: 'Missing TRAIN_BUCKET/S3_DATA_BUCKET' });
+	const companyId = (req as any).user.companyId;
+	const records = await AggregatedRecord.find({ companyId }).limit(1000);
+	const lines = records.map(r => JSON.stringify({
+		employeeAnonymizedId: r.employeeAnonymizedId,
+		period: r.period,
+		emotionalState: r.emotionalState,
+		opinions: r.opinions,
+		metrics: r.metrics
+	})).join('\n') + '\n';
+	const key = `datasets/${companyId}/train.jsonl`;
+	await uploadTextToS3(s3Bucket, key, lines);
+	return res.json({ ok: true, key, count: records.length });
+});
+
+router.post('/insights/mock-write', requireAuth, requireRole('admin', 'ceo'), audit('insights_mock_write'), async (req, res) => {
+	const s3Bucket = process.env.TRAIN_BUCKET || process.env.S3_DATA_BUCKET;
+	if (!s3Bucket) return res.status(500).json({ error: 'Missing TRAIN_BUCKET/S3_DATA_BUCKET' });
+	const companyId = (req as any).user.companyId;
+	const key = `models/${companyId}/insights.json`;
+	const insights = req.body?.insights ?? [
+		{ title: 'Improve onboarding fairness', detail: 'Standardize mentorship access across teams' }
+	];
+	await uploadTextToS3(s3Bucket, key, JSON.stringify(insights));
+	return res.json({ ok: true });
 });
 
 export default router;
