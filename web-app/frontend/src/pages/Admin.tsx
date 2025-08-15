@@ -113,6 +113,10 @@ export default function Admin() {
 				</div>
 				<MetricsChart key={`${kpis}|${periodFrom}|${periodTo}`} />
 			</div>
+			<div className="border p-3 rounded">
+				<h3 className="font-medium mb-2">Model Insights</h3>
+				<p className="text-sm text-gray-600">After training completes, generated ethical strategy suggestions will appear here.</p>
+			</div>
 			<TimeSeriesChart />
 		</div>
 	);

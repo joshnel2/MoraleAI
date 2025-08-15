@@ -3,6 +3,8 @@ import { requireAuth, requireRole } from '../middleware/auth';
 import { audit } from '../middleware/audit';
 import crypto from 'crypto';
 import { ApiKey } from '../models/ApiKey';
+import { uploadTextToS3 } from '../services/s3';
+import { startTrainingJob } from '../services/sagemaker';
 
 const router = Router();
 
@@ -11,11 +13,19 @@ router.post('/chatbot/deploy', requireAuth, requireRole('admin', 'ceo'), audit('
 });
 
 router.post('/training/aws/start', requireAuth, requireRole('admin', 'ceo'), audit('aws_training_start'), async (req, res) => {
-	return res.status(202).json({ status: 'started', jobId: 'demo-job' });
+	const s3Bucket = process.env.TRAIN_BUCKET || process.env.S3_DATA_BUCKET;
+	const roleArn = process.env.SAGEMAKER_ROLE_ARN || '';
+	if (!s3Bucket || !roleArn) return res.status(500).json({ error: 'Missing TRAIN_BUCKET/S3_DATA_BUCKET or SAGEMAKER_ROLE_ARN' });
+	const companyId = (req as any).user.companyId;
+	// Upload minimal dataset stub (in practice aggregate/anonymize first)
+	const key = `datasets/${companyId}/train.jsonl`;
+	await uploadTextToS3(s3Bucket, key, '{}\n');
+	const jobName = `ai-pbt-${companyId}-${Date.now()}`;
+	await startTrainingJob(jobName, roleArn, `s3://${s3Bucket}/datasets/${companyId}`, `s3://${s3Bucket}/models/${companyId}`);
+	return res.status(202).json({ status: 'started', jobId: jobName });
 });
 
 router.get('/config', requireAuth, async (req, res) => {
-	// Company-specific chatbot config (stub)
 	return res.json({
 		companyId: (req as any).user.companyId,
 		prompt: 'Please share how you are feeling today and what is going well or wrong.',
