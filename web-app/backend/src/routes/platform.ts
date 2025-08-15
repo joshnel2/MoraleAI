@@ -11,6 +11,7 @@ import jwt from 'jsonwebtoken';
 import { buildTrainingArtifact } from '../services/trainingArtifact';
 import os from 'os';
 import path from 'path';
+import { AgentPolicy } from '../models/AgentPolicy';
 
 const router = Router();
 
@@ -165,6 +166,24 @@ router.post('/agent/ingest', requireAuth, requireRole('employee', 'admin', 'ceo'
 	const employeeAnonymizedId = (req as any).user.userId;
 	await AggregatedRecord.create({ companyId, employeeAnonymizedId, period, metrics: { agentEvents: events } });
 	return res.json({ ok: true, accepted: events.length });
+});
+
+router.get('/agent/policy', requireAuth, requireRole('admin', 'ceo', 'employee'), async (req, res) => {
+	const companyId = (req as any).user.companyId;
+	let policy = await AgentPolicy.findOne({ companyId });
+	if (!policy) policy = await AgentPolicy.create({ companyId });
+	return res.json({ policy });
+});
+
+router.post('/agent/policy', requireAuth, requireRole('admin', 'ceo'), audit('agent_policy_update'), async (req, res) => {
+	const companyId = (req as any).user.companyId;
+	const { samplingIntervalSec, collectUrls, excludeApps, excludeUrlPatterns } = req.body || {};
+	const policy = await AgentPolicy.findOneAndUpdate(
+		{ companyId },
+		{ $set: { samplingIntervalSec, collectUrls, excludeApps, excludeUrlPatterns } },
+		{ new: true, upsert: true }
+	);
+	return res.json({ policy });
 });
 
 export default router;

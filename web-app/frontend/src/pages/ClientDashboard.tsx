@@ -29,6 +29,29 @@ export default function ClientDashboard() {
 	async function agentDeactivate() { await client.post('/platform/agent/deactivate', {}); }
 	async function agentSaveSeats() { await client.post('/platform/agent/seats', { seats: agentSeats }); }
 
+	// Agent policy
+	const [samplingIntervalSec, setSampling] = useState(5);
+	const [collectUrls, setCollectUrls] = useState(false);
+	const [excludeApps, setExcludeApps] = useState('');
+	const [excludeUrlPatterns, setExcludeUrls] = useState('');
+	async function loadPolicy() {
+		const res = await client.get('/platform/agent/policy');
+		const p = res.data.policy;
+		setSampling(p.samplingIntervalSec);
+		setCollectUrls(p.collectUrls);
+		setExcludeApps((p.excludeApps || []).join(','));
+		setExcludeUrls((p.excludeUrlPatterns || []).join(','));
+	}
+	async function savePolicy() {
+		await client.post('/platform/agent/policy', {
+			samplingIntervalSec: samplingIntervalSec,
+			collectUrls,
+			excludeApps: excludeApps.split(',').map(s=>s.trim()).filter(Boolean),
+			excludeUrlPatterns: excludeUrlPatterns.split(',').map(s=>s.trim()).filter(Boolean)
+		});
+		alert('Policy saved');
+	}
+
 	return (
 		<div className="space-y-4">
 			<h2 className="text-2xl font-bold">Client Dashboard</h2>
@@ -55,6 +78,19 @@ export default function ClientDashboard() {
 					<button className="px-3 py-2 border rounded" onClick={agentDeactivate} disabled={!token}>Deactivate</button>
 				</div>
 				<p className="text-sm text-gray-600 mt-2">Desktop app tracks work activity (apps, window titles, time on task) with consent, to enrich business AI training. Priced higher than extension.</p>
+			</div>
+			<div className="border p-3 rounded">
+				<h3 className="font-medium mb-2">Agent Policy</h3>
+				<div className="grid gap-2 max-w-xl">
+					<label>Sampling (sec) <input className="border p-1 w-24" type="number" value={samplingIntervalSec} onChange={e=>setSampling(parseInt(e.target.value||'5'))} /></label>
+					<label><input type="checkbox" checked={collectUrls} onChange={e=>setCollectUrls(e.target.checked)} /> Collect URLs</label>
+					<label>Exclude Apps (comma) <input className="border p-1" value={excludeApps} onChange={e=>setExcludeApps(e.target.value)} /></label>
+					<label>Exclude URL Patterns (comma regex) <input className="border p-1" value={excludeUrlPatterns} onChange={e=>setExcludeUrls(e.target.value)} /></label>
+					<div className="space-x-2">
+						<button className="px-3 py-2 border rounded" onClick={loadPolicy} disabled={!token}>Load Policy</button>
+						<button className="px-3 py-2 border rounded" onClick={savePolicy} disabled={!token}>Save Policy</button>
+					</div>
+				</div>
 			</div>
 		</div>
 	);
