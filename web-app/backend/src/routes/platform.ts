@@ -6,6 +6,8 @@ import { ApiKey } from '../models/ApiKey';
 import { uploadTextToS3, downloadTextFromS3 } from '../services/s3';
 import { startTrainingJob } from '../services/sagemaker';
 import { AggregatedRecord } from '../models/AggregatedRecord';
+import { Company } from '../models/Company';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 
@@ -93,6 +95,37 @@ router.post('/insights/mock-write', requireAuth, requireRole('admin', 'ceo'), au
 	];
 	await uploadTextToS3(s3Bucket, key, JSON.stringify(insights));
 	return res.json({ ok: true });
+});
+
+router.post('/extension/activate', requireAuth, requireRole('admin', 'ceo'), audit('extension_activate'), async (req, res) => {
+	const companyId = (req as any).user.companyId;
+	const { seats = 0 } = req.body || {};
+	await Company.findByIdAndUpdate(companyId, { extensionAddonActive: true, extensionSeats: seats });
+	return res.json({ ok: true });
+});
+
+router.post('/extension/deactivate', requireAuth, requireRole('admin', 'ceo'), audit('extension_deactivate'), async (req, res) => {
+	const companyId = (req as any).user.companyId;
+	await Company.findByIdAndUpdate(companyId, { extensionAddonActive: false });
+	return res.json({ ok: true });
+});
+
+router.post('/extension/seats', requireAuth, requireRole('admin', 'ceo'), audit('extension_set_seats'), async (req, res) => {
+	const companyId = (req as any).user.companyId;
+	const { seats } = req.body || {};
+	await Company.findByIdAndUpdate(companyId, { extensionSeats: Math.max(0, Number(seats || 0)) });
+	return res.json({ ok: true });
+});
+
+router.post('/extension/employee-token', requireAuth, requireRole('admin', 'ceo', 'employee'), async (req, res) => {
+	const companyId = (req as any).user.companyId;
+	const company = await Company.findById(companyId);
+	if (!company?.extensionAddonActive || (company.extensionSeats || 0) <= 0) {
+		return res.status(402).json({ error: 'Extension add-on inactive or no seats' });
+	}
+	const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+	const token = jwt.sign({ userId: (req as any).user.userId, role: 'employee', companyId: String(companyId) }, JWT_SECRET, { expiresIn: '8h' });
+	return res.json({ token });
 });
 
 export default router;

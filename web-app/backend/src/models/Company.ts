@@ -2,13 +2,17 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface CompanyDocument extends Document {
 	name: string;
+	extensionAddonActive?: boolean;
+	extensionSeats?: number;
 	createdAt: Date;
 	updatedAt: Date;
 }
 
 const CompanySchema = new Schema<CompanyDocument>(
 	{
-		name: { type: String, required: true, unique: true }
+		name: { type: String, required: true, unique: true },
+		extensionAddonActive: { type: Boolean, default: false },
+		extensionSeats: { type: Number, default: 0 }
 	},
 	{ timestamps: true }
 );
