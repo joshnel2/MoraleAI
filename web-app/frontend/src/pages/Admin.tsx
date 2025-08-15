@@ -64,6 +64,12 @@ export default function Admin() {
 		alert(JSON.stringify(res.data.keys));
 	}
 
+	const [insights, setInsights] = useState<any[]>([]);
+	async function fetchInsights() {
+		const res = await client.get('/platform/insights');
+		setInsights(res.data.insights || []);
+	}
+
 	return (
 		<div className="space-y-4">
 			<h2 className="text-xl font-semibold">Admin</h2>
@@ -116,6 +122,10 @@ export default function Admin() {
 			<div className="border p-3 rounded">
 				<h3 className="font-medium mb-2">Model Insights</h3>
 				<p className="text-sm text-gray-600">After training completes, generated ethical strategy suggestions will appear here.</p>
+				<div className="mt-2">
+					<button className="px-3 py-2 border rounded" onClick={fetchInsights} disabled={!token}>Refresh Insights</button>
+					<pre className="mt-2 text-xs bg-gray-50 p-2 rounded overflow-auto">{JSON.stringify(insights, null, 2)}</pre>
+				</div>
 			</div>
 			<TimeSeriesChart />
 		</div>

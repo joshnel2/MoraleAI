@@ -3,7 +3,7 @@ import { requireAuth, requireRole } from '../middleware/auth';
 import { audit } from '../middleware/audit';
 import crypto from 'crypto';
 import { ApiKey } from '../models/ApiKey';
-import { uploadTextToS3 } from '../services/s3';
+import { uploadTextToS3, downloadTextFromS3 } from '../services/s3';
 import { startTrainingJob } from '../services/sagemaker';
 
 const router = Router();
@@ -17,12 +17,30 @@ router.post('/training/aws/start', requireAuth, requireRole('admin', 'ceo'), aud
 	const roleArn = process.env.SAGEMAKER_ROLE_ARN || '';
 	if (!s3Bucket || !roleArn) return res.status(500).json({ error: 'Missing TRAIN_BUCKET/S3_DATA_BUCKET or SAGEMAKER_ROLE_ARN' });
 	const companyId = (req as any).user.companyId;
-	// Upload minimal dataset stub (in practice aggregate/anonymize first)
 	const key = `datasets/${companyId}/train.jsonl`;
 	await uploadTextToS3(s3Bucket, key, '{}\n');
 	const jobName = `ai-pbt-${companyId}-${Date.now()}`;
 	await startTrainingJob(jobName, roleArn, `s3://${s3Bucket}/datasets/${companyId}`, `s3://${s3Bucket}/models/${companyId}`);
 	return res.status(202).json({ status: 'started', jobId: jobName });
+});
+
+router.post('/datasets/upload', requireAuth, requireRole('admin', 'ceo'), audit('dataset_upload'), async (req, res) => {
+	const s3Bucket = process.env.TRAIN_BUCKET || process.env.S3_DATA_BUCKET;
+	if (!s3Bucket) return res.status(500).json({ error: 'Missing TRAIN_BUCKET/S3_DATA_BUCKET' });
+	const companyId = (req as any).user.companyId;
+	const body = JSON.stringify(req.body ?? {});
+	const key = `datasets/${companyId}/train.jsonl`;
+	await uploadTextToS3(s3Bucket, key, `${body}\n`);
+	return res.json({ ok: true, key });
+});
+
+router.get('/insights', requireAuth, requireRole('admin', 'ceo'), async (req, res) => {
+	const s3Bucket = process.env.TRAIN_BUCKET || process.env.S3_DATA_BUCKET;
+	if (!s3Bucket) return res.status(500).json({ error: 'Missing TRAIN_BUCKET/S3_DATA_BUCKET' });
+	const companyId = (req as any).user.companyId;
+	const key = `models/${companyId}/insights.json`;
+	const txt = await downloadTextFromS3(s3Bucket, key);
+	return res.json({ insights: txt ? JSON.parse(txt) : [] });
 });
 
 router.get('/config', requireAuth, async (req, res) => {
