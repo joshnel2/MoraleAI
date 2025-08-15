@@ -1,3 +1,5 @@
+import { io } from 'socket.io-client';
+
 const chatEl = document.getElementById('chat');
 const inputEl = document.getElementById('message');
 const sendBtn = document.getElementById('send');
@@ -35,7 +37,6 @@ async function login() {
 function connect() {
 	if (!token) return append('Please login first.', 'system');
 	if (socket) socket.disconnect();
-	const io = window.io;
 	socket = io('http://localhost:4000', { auth: { token } });
 	socket.on('connect', () => append('Connected.', 'system'));
 	socket.on('chat:reply', (payload) => append(payload?.message || '', 'assistant'));
@@ -56,9 +57,3 @@ sendBtn.addEventListener('click', () => {
 });
 
 loginBtn.addEventListener('click', login);
-
-// load socket.io client from CDN
-const s = document.createElement('script');
-s.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
-s.onload = () => append('Ready. Please login.', 'system');
-document.body.appendChild(s);

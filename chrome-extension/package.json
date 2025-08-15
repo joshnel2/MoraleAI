@@ -1,0 +1,12 @@
+{
+	"name": "ai-pbt-extension",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"build": "mkdir -p dist && cp manifest.json popup.html content.js background.js dist/ && esbuild popup.js --bundle --outfile=dist/popup.js --define:global=window --platform=browser"
+	},
+	"devDependencies": {
+		"esbuild": "^0.21.5",
+		"socket.io-client": "^4.7.5"
+	}
+}

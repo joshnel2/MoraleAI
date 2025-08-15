@@ -47,6 +47,13 @@ export default function Admin() {
 		await client.post('/metrics/upload-csv', form, { headers: { 'Content-Type': 'multipart/form-data' } });
 	}
 
+	async function deployChatbot() {
+		await client.post('/platform/chatbot/deploy', {});
+	}
+	async function startTraining() {
+		await client.post('/platform/training/aws/start', {});
+	}
+
 	return (
 		<div className="space-y-4">
 			<h2 className="text-xl font-semibold">Admin</h2>
@@ -64,6 +71,13 @@ export default function Admin() {
 					<input className="border p-2 w-full mb-2" value={password} onChange={e=>setPassword(e.target.value)} type="password" placeholder="Password" />
 					<button className="px-3 py-2 bg-blue-600 text-white rounded" onClick={login}>Login</button>
 					{token && <p className="mt-2 text-sm text-green-700">Token acquired.</p>}
+				</div>
+			</div>
+			<div className="border p-3 rounded">
+				<h3 className="font-medium mb-2">Platform Actions</h3>
+				<div className="space-x-2">
+					<button className="px-3 py-2 bg-purple-700 text-white rounded" onClick={deployChatbot} disabled={!token}>Deploy Chatbot</button>
+					<button className="px-3 py-2 bg-amber-700 text-white rounded" onClick={startTraining} disabled={!token}>Start Training (AWS)</button>
 				</div>
 			</div>
 			<div className="border p-3 rounded">

@@ -13,6 +13,7 @@ import dataRoutes from './routes/data';
 import metricsRoutes from './routes/metrics';
 import auditRoutes from './routes/audit';
 import swaggerUi from 'swagger-ui-express';
+import platformRoutes from './routes/platform';
 
 const openApiDoc = {
 	openapi: '3.0.0',
@@ -48,6 +49,7 @@ app.use('/auth', authRoutes);
 app.use('/data', dataRoutes);
 app.use('/metrics', metricsRoutes);
 app.use('/audit', auditRoutes);
+app.use('/platform', platformRoutes);
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc as any));
 
 app.get('/health', (_req: Request, res: Response) => res.json({ ok: true }));
