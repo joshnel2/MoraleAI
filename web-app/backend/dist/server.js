@@ -17,16 +17,7 @@ const openApiDoc = {
     openapi: '3.0.0',
     info: { title: 'AI-Profile-Business-Tool API', version: '0.1.0' },
     paths: {
-        '/auth/login': { post: { summary: 'Login', responses: { '200': { description: 'OK' } } } },
-        '/auth/register-admin': { post: { summary: 'Register admin', responses: { '200': { description: 'OK' } } } },
-        '/auth/register-employee': { post: { summary: 'Register employee', responses: { '200': { description: 'OK' } } } },
-        '/auth/me': { get: { summary: 'Current user', responses: { '200': { description: 'OK' } } } },
-        '/metrics/upload': { post: { summary: 'Upload KPI JSON', responses: { '200': { description: 'OK' } } } },
-        '/metrics/upload-csv': { post: { summary: 'Upload KPI CSV', responses: { '200': { description: 'OK' } } } },
-        '/metrics/summary': { get: { summary: 'KPI summary by period', responses: { '200': { description: 'OK' } } } },
-        '/metrics/series': { get: { summary: 'KPI time series', responses: { '200': { description: 'OK' } } } },
-        '/metrics/kpis': { get: { summary: 'List KPI names', responses: { '200': { description: 'OK' } } } },
-        '/audit/logs': { get: { summary: 'Audit logs', responses: { '200': { description: 'OK' } } } }
+        '/health': { get: { summary: 'Health', responses: { '200': { description: 'OK' } } } }
     }
 };
 // Basic config

@@ -1,0 +1,32 @@
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Backend install and build
+        run: |
+          cd web-app/backend
+          npm install
+          npm run build
+      - name: Frontend install
+        run: |
+          cd web-app/frontend
+          npm install
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1 || true
+          npm i -D @playwright/test
+          npx playwright install --with-deps
+      - name: E2E placeholder
+        run: |
+          echo "Skipping e2e until services are started in CI"
