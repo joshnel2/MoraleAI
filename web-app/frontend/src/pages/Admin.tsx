@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import axios from 'axios';
 import MetricsChart from '../components/MetricsChart';
 import CsvMapper from '../components/CsvMapper';
+import TimeSeriesChart from '../components/TimeSeriesChart';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
@@ -86,6 +87,7 @@ export default function Admin() {
 				</div>
 				<MetricsChart key={`${kpis}|${periodFrom}|${periodTo}`} />
 			</div>
+			<TimeSeriesChart />
 		</div>
 	);
 }

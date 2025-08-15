@@ -64,6 +64,40 @@ router.get('/summary', requireAuth, requireRole('admin', 'ceo'), async (req, res
     ]);
     return res.json({ summary });
 });
+router.get('/series', requireAuth, requireRole('admin', 'ceo'), async (req, res) => {
+    const companyId = req.user.companyId;
+    const kpi = typeof req.query.kpi === 'string' ? req.query.kpi : undefined;
+    if (!kpi)
+        return res.status(400).json({ error: 'Missing kpi' });
+    const periodFrom = typeof req.query.periodFrom === 'string' ? req.query.periodFrom : undefined;
+    const periodTo = typeof req.query.periodTo === 'string' ? req.query.periodTo : undefined;
+    const match = { companyId, kpiName: kpi };
+    if (periodFrom || periodTo) {
+        match.period = {};
+        if (periodFrom)
+            match.period.$gte = periodFrom;
+        if (periodTo)
+            match.period.$lte = periodTo;
+    }
+    const series = await KpiRecord.aggregate([
+        { $match: match },
+        { $addFields: { numValue: { $convert: { input: '$value', to: 'double', onError: null, onNull: null } } } },
+        { $group: {
+                _id: '$period',
+                count: { $sum: 1 },
+                sumValue: { $sum: { $ifNull: ['$numValue', 0] } },
+                numCount: { $sum: { $cond: [{ $ne: ['$numValue', null] }, 1, 0] } }
+            } },
+        { $project: {
+                period: '$_id',
+                count: 1,
+                sum: '$sumValue',
+                avg: { $cond: [{ $gt: ['$numCount', 0] }, { $divide: ['$sumValue', '$numCount'] }, null] }
+            } },
+        { $sort: { period: 1 } }
+    ]);
+    return res.json({ series });
+});
 router.get('/kpis', requireAuth, requireRole('admin', 'ceo'), async (req, res) => {
     const companyId = req.user.companyId;
     const names = await KpiRecord.distinct('kpiName', { companyId });
