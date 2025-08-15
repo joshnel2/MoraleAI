@@ -137,4 +137,34 @@ router.post('/extension/employee-token', requireAuth, requireRole('admin', 'ceo'
 	return res.json({ token });
 });
 
+router.post('/agent/activate', requireAuth, requireRole('admin', 'ceo'), audit('agent_activate'), async (req, res) => {
+	const companyId = (req as any).user.companyId;
+	const { seats = 0 } = req.body || {};
+	await Company.findByIdAndUpdate(companyId, { agentAddonActive: true, agentSeats: seats });
+	return res.json({ ok: true });
+});
+
+router.post('/agent/deactivate', requireAuth, requireRole('admin', 'ceo'), audit('agent_deactivate'), async (req, res) => {
+	const companyId = (req as any).user.companyId;
+	await Company.findByIdAndUpdate(companyId, { agentAddonActive: false });
+	return res.json({ ok: true });
+});
+
+router.post('/agent/seats', requireAuth, requireRole('admin', 'ceo'), audit('agent_set_seats'), async (req, res) => {
+	const companyId = (req as any).user.companyId;
+	const { seats } = req.body || {};
+	await Company.findByIdAndUpdate(companyId, { agentSeats: Math.max(0, Number(seats || 0)) });
+	return res.json({ ok: true });
+});
+
+router.post('/agent/ingest', requireAuth, requireRole('employee', 'admin', 'ceo'), audit('agent_ingest'), async (req, res) => {
+	// Event schema: { events: [{ ts, app, windowTitle, durationSec, url? }] }
+	// Store minimal sample in AggregatedRecord.metrics; in production, use dedicated collection
+	const companyId = (req as any).user.companyId;
+	const { events = [], period } = req.body || {};
+	const employeeAnonymizedId = (req as any).user.userId;
+	await AggregatedRecord.create({ companyId, employeeAnonymizedId, period, metrics: { agentEvents: events } });
+	return res.json({ ok: true, accepted: events.length });
+});
+
 export default router;

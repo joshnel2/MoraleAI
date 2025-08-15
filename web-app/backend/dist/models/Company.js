@@ -3,6 +3,8 @@ const CompanySchema = new Schema({
     name: { type: String, required: true, unique: true },
     extensionAddonActive: { type: Boolean, default: false },
     extensionSeats: { type: Number, default: 0 },
+    agentAddonActive: { type: Boolean, default: false },
+    agentSeats: { type: Number, default: 0 },
     plan: { type: String, enum: ['starter', 'growth', 'scale'], default: 'starter' },
     baseSeats: { type: Number, default: 10 }
 }, { timestamps: true });

@@ -23,6 +23,11 @@ export default function ClientDashboard() {
 	async function activate() { await client.post('/platform/extension/activate', { seats }); }
 	async function deactivate() { await client.post('/platform/extension/deactivate', {}); }
 	async function saveSeats() { await client.post('/platform/extension/seats', { seats }); }
+	// Agent controls
+	const [agentSeats, setAgentSeats] = useState(10);
+	async function agentActivate() { await client.post('/platform/agent/activate', { seats: agentSeats }); }
+	async function agentDeactivate() { await client.post('/platform/agent/deactivate', {}); }
+	async function agentSaveSeats() { await client.post('/platform/agent/seats', { seats: agentSeats }); }
 
 	return (
 		<div className="space-y-4">
@@ -40,6 +45,16 @@ export default function ClientDashboard() {
 					<button className="px-3 py-2 border rounded" onClick={deactivate} disabled={!token}>Deactivate</button>
 				</div>
 				<p className="text-sm text-gray-600 mt-2">Add-on is billed per month. Employees can chat, receive assistance, and answer periodic questions to improve business insights.</p>
+			</div>
+			<div className="border p-3 rounded">
+				<h3 className="font-medium mb-2">Desktop Agent Add-on</h3>
+				<div className="flex items-center gap-2">
+					<label>Seats <input className="border p-1 w-24" type="number" value={agentSeats} onChange={e=>setAgentSeats(parseInt(e.target.value||'0'))} /></label>
+					<button className="px-3 py-2 border rounded" onClick={agentSaveSeats} disabled={!token}>Save Seats</button>
+					<button className="px-3 py-2 border rounded" onClick={agentActivate} disabled={!token}>Activate</button>
+					<button className="px-3 py-2 border rounded" onClick={agentDeactivate} disabled={!token}>Deactivate</button>
+				</div>
+				<p className="text-sm text-gray-600 mt-2">Desktop app tracks work activity (apps, window titles, time on task) with consent, to enrich business AI training. Priced higher than extension.</p>
 			</div>
 		</div>
 	);
