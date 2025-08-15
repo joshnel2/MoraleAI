@@ -6,7 +6,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
 type SummaryRow = { _id: { kpiName: string; period: string }; count: number };
 
-export default function MetricsChart() {
+export default function MetricsChart(props: { kpis?: string; periodFrom?: string; periodTo?: string }) {
 	const [data, setData] = useState<SummaryRow[]>([]);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const [token, setToken] = useState<string | null>(null);
@@ -34,8 +34,12 @@ export default function MetricsChart() {
 
 	useEffect(() => {
 		if (!token) return;
-		client.get('/metrics/summary').then((res) => setData(res.data.summary)).catch(() => setData([]));
-	}, [client, token]);
+		const params: any = {};
+		if (props.kpis) params.kpis = props.kpis;
+		if (props.periodFrom) params.periodFrom = props.periodFrom;
+		if (props.periodTo) params.periodTo = props.periodTo;
+		client.get('/metrics/summary', { params }).then((res) => setData(res.data.summary)).catch(() => setData([]));
+	}, [client, token, props.kpis, props.periodFrom, props.periodTo]);
 
 	useEffect(() => {
 		if (!canvasRef.current) return;

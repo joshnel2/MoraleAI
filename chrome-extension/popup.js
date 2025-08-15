@@ -2,6 +2,9 @@ const chatEl = document.getElementById('chat');
 const inputEl = document.getElementById('message');
 const sendBtn = document.getElementById('send');
 const consentEl = document.getElementById('consent');
+const emailEl = document.getElementById('email');
+const passwordEl = document.getElementById('password');
+const loginBtn = document.getElementById('login');
 
 let socket;
 let token = null;
@@ -15,17 +18,23 @@ function append(text, who) {
 
 async function login() {
 	try {
-		const res = await fetch('http://localhost:4000/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'admin@example.com', password: 'examplePass123' }) });
+		const res = await fetch('http://localhost:4000/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: emailEl.value, password: passwordEl.value }) });
 		if (res.ok) {
 			const data = await res.json();
 			token = data.token;
+			append('Logged in.', 'system');
+			connect();
+		} else {
+			append('Login failed.', 'system');
 		}
-	} catch {}
+	} catch {
+		append('Login error.', 'system');
+	}
 }
 
 function connect() {
+	if (!token) return append('Please login first.', 'system');
 	if (socket) socket.disconnect();
-	// socket.io client via CDN
 	const io = window.io;
 	socket = io('http://localhost:4000', { auth: { token } });
 	socket.on('connect', () => append('Connected.', 'system'));
@@ -36,6 +45,7 @@ function connect() {
 sendBtn.addEventListener('click', () => {
 	const msg = inputEl.value.trim();
 	if (!msg) return;
+	if (!token) return append('Please login first.', 'system');
 	if (!consentEl.checked) {
 		append('Please provide consent before chatting.', 'system');
 		return;
@@ -45,11 +55,10 @@ sendBtn.addEventListener('click', () => {
 	inputEl.value = '';
 });
 
-(async () => {
-	await login();
-	// load socket.io client
-	const s = document.createElement('script');
-	s.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
-	s.onload = connect;
-	document.body.appendChild(s);
-})();
+loginBtn.addEventListener('click', login);
+
+// load socket.io client from CDN
+const s = document.createElement('script');
+s.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
+s.onload = () => append('Ready. Please login.', 'system');
+document.body.appendChild(s);

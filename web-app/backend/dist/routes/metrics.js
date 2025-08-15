@@ -44,8 +44,21 @@ router.post('/upload-csv', requireAuth, requireRole('admin', 'ceo'), audit('kpi_
 });
 router.get('/summary', requireAuth, requireRole('admin', 'ceo'), async (req, res) => {
     const companyId = req.user.companyId;
+    const kpis = typeof req.query.kpis === 'string' ? req.query.kpis.split(',').map(s => s.trim()).filter(Boolean) : undefined;
+    const periodFrom = typeof req.query.periodFrom === 'string' ? req.query.periodFrom : undefined;
+    const periodTo = typeof req.query.periodTo === 'string' ? req.query.periodTo : undefined;
+    const match = { companyId };
+    if (kpis && kpis.length)
+        match.kpiName = { $in: kpis };
+    if (periodFrom || periodTo) {
+        match.period = {};
+        if (periodFrom)
+            match.period.$gte = periodFrom;
+        if (periodTo)
+            match.period.$lte = periodTo;
+    }
     const summary = await KpiRecord.aggregate([
-        { $match: { companyId } },
+        { $match: match },
         { $group: { _id: { kpiName: '$kpiName', period: '$period' }, count: { $sum: 1 } } },
         { $sort: { '_id.kpiName': 1, '_id.period': 1 } }
     ]);

@@ -11,6 +11,9 @@ export default function Admin() {
 	const [password, setPassword] = useState('examplePass123');
 	const [kpiJson, setKpiJson] = useState('{"records":[{"kpiName":"sales","period":"2025-08","value":12345}]}');
 	const [csvFile, setCsvFile] = useState<File | null>(null);
+	const [kpis, setKpis] = useState('');
+	const [periodFrom, setPeriodFrom] = useState('');
+	const [periodTo, setPeriodTo] = useState('');
 
 	const client = useMemo(() => {
 		const inst = axios.create({ baseURL: API_BASE });
@@ -62,7 +65,7 @@ export default function Admin() {
 				</div>
 			</div>
 			<div className="border p-3 rounded">
-				<h3 className="font-medium mb-2">Upload KPIs (JSON)</h3>
+				<h3 className="font-medium mb-2">Upload KPIs (JSON/CSV)</h3>
 				<textarea className="border p-2 w-full h-40 font-mono" value={kpiJson} onChange={e=>setKpiJson(e.target.value)} />
 				<div className="mt-2 space-x-2">
 					<button className="px-3 py-2 bg-purple-600 text-white rounded" onClick={uploadKpis} disabled={!token}>Upload JSON</button>
@@ -72,7 +75,12 @@ export default function Admin() {
 			</div>
 			<div className="border p-3 rounded">
 				<h3 className="font-medium mb-2">Metrics Summary</h3>
-				<MetricsChart />
+				<div className="flex gap-2 mb-2">
+					<input className="border p-2" placeholder="kpis (comma)" value={kpis} onChange={e=>setKpis(e.target.value)} />
+					<input className="border p-2" placeholder="periodFrom (YYYY-MM)" value={periodFrom} onChange={e=>setPeriodFrom(e.target.value)} />
+					<input className="border p-2" placeholder="periodTo (YYYY-MM)" value={periodTo} onChange={e=>setPeriodTo(e.target.value)} />
+				</div>
+				<MetricsChart key={`${kpis}|${periodFrom}|${periodTo}`} />
 			</div>
 		</div>
 	);
