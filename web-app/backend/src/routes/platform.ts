@@ -129,6 +129,28 @@ router.post('/insights/mock-write', requireAuth, requireRole('admin', 'ceo'), au
 	return res.json({ ok: true });
 });
 
+router.post('/insights/generate', requireAuth, requireRole('admin', 'ceo'), audit('insights_generate'), async (req, res) => {
+	const s3Bucket = process.env.TRAIN_BUCKET || process.env.S3_DATA_BUCKET;
+	if (!s3Bucket) return res.status(500).json({ error: 'Missing TRAIN_BUCKET/S3_DATA_BUCKET' });
+	const companyId = (req as any).user.companyId;
+	const records = await AggregatedRecord.find({ companyId }).limit(500);
+	// Simple heuristic insights generator
+	let avgH = 0, nH = 0, avgS = 0, nS = 0;
+	records.forEach((r) => {
+		if (r.emotionalState?.happiness) { avgH += r.emotionalState.happiness; nH++; }
+		if (r.emotionalState?.stress) { avgS += r.emotionalState.stress; nS++; }
+	});
+	const happiness = nH ? avgH / nH : null;
+	const stress = nS ? avgS / nS : null;
+	const insights: Array<any> = [];
+	if (happiness !== null) insights.push({ title: happiness < 6 ? 'Boost team morale' : 'Sustain high morale', detail: happiness < 6 ? 'Increase 1:1s and recognition programs' : 'Keep recognition cadence; expand mentorship' });
+	if (stress !== null) insights.push({ title: stress > 6 ? 'Reduce stressors' : 'Maintain healthy workload', detail: stress > 6 ? 'Identify bottlenecks; rebalance workloads' : 'Continue monitoring workloads and PTO usage' });
+	insights.push({ title: 'Automation opportunity', detail: 'Automate weekly KPI collection and employee check-ins' });
+	const key = `models/${companyId}/insights.json`;
+	await uploadTextToS3(s3Bucket, key, JSON.stringify(insights));
+	return res.json({ ok: true, count: insights.length });
+});
+
 router.post('/extension/activate', requireAuth, requireRole('admin', 'ceo'), audit('extension_activate'), async (req, res) => {
 	const companyId = (req as any).user.companyId;
 	const { seats = 0 } = req.body || {};

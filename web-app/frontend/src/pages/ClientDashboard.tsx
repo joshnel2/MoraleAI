@@ -52,6 +52,10 @@ export default function ClientDashboard() {
 		alert('Policy saved');
 	}
 
+	const [ownerRecs, setOwnerRecs] = useState<any>(null);
+	async function generateInsights() { await client.post('/platform/insights/generate', {}); alert('Insights generated'); }
+	async function loadRecs() { const r = await client.get('/platform/recommendations'); setOwnerRecs(r.data.recommendations); }
+
 	return (
 		<div className="space-y-4">
 			<h2 className="text-2xl font-bold">Client Dashboard</h2>
@@ -91,6 +95,14 @@ export default function ClientDashboard() {
 						<button className="px-3 py-2 border rounded" onClick={savePolicy} disabled={!token}>Save Policy</button>
 					</div>
 				</div>
+			</div>
+			<div className="border p-3 rounded">
+				<h3 className="font-medium mb-2">Strategy & Recommendations</h3>
+				<div className="space-x-2">
+					<button className="px-3 py-2 border rounded" onClick={generateInsights} disabled={!token}>Generate Insights</button>
+					<button className="px-3 py-2 border rounded" onClick={loadRecs} disabled={!token}>Load Recommendations</button>
+				</div>
+				{ownerRecs && <pre className="mt-2 text-xs bg-gray-50 p-2 rounded overflow-auto">{JSON.stringify(ownerRecs, null, 2)}</pre>}
 			</div>
 		</div>
 	);
