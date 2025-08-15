@@ -12,6 +12,18 @@ import authRoutes from './routes/auth';
 import dataRoutes from './routes/data';
 import metricsRoutes from './routes/metrics';
 import auditRoutes from './routes/audit';
+import swaggerUi from 'swagger-ui-express';
+
+const openApiDoc = {
+	openapi: '3.0.0',
+	info: { title: 'AI-Profile-Business-Tool API', version: '0.1.0' },
+	paths: {
+		'/auth/login': { post: { summary: 'Login', responses: { '200': { description: 'OK' } } } },
+		'/auth/register-admin': { post: { summary: 'Register admin', responses: { '200': { description: 'OK' } } } },
+		'/metrics/upload': { post: { summary: 'Upload KPI JSON', responses: { '200': { description: 'OK' } } } },
+		'/metrics/upload-csv': { post: { summary: 'Upload KPI CSV', responses: { '200': { description: 'OK' } } } }
+	}
+};
 
 // Basic config
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -39,6 +51,7 @@ app.use('/auth', authRoutes);
 app.use('/data', dataRoutes);
 app.use('/metrics', metricsRoutes);
 app.use('/audit', auditRoutes);
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc as any));
 
 app.get('/health', (_req: Request, res: Response) => res.json({ ok: true }));
 
